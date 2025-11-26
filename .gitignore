@@ -1,0 +1,18 @@
+# Flask .gitignore 
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+
+# Database files
+app.db
+
+# Environment / secrets
+.env
+
+# VS Code
+.vscode/
+
