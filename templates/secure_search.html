@@ -1,19 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Search Results</h2>
-<p>Searching for: "{{ q }}"</p>
+<h2>Search</h2>
 
-<p><a href="{{ url_for('secure.secure_dashboard') }}">Back to dashboard</a></p>
-
-<hr>
-
-{% if rows %}
-    {% for r in rows %}
-        <p>{{ r.content|safe }}</p>
-        <hr>
-    {% endfor %}
-{% else %}
-    <p>No results found.</p>
+{% if q %}
+    <p>You searched for: {{ q }}</p>   {# escaped #}
 {% endif %}
 
+<ul>
+    {% for r in rows %}
+        <li>{{ r.content }}</li>      {# escaped #}
+    {% endfor %}
+</ul>
+
+<p><a href="{{ url_for('secure.secure_dashboard') }}">Back to dashboard</a></p>
 {% endblock %}
