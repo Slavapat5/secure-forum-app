@@ -29,21 +29,22 @@ def secure_register():
             flash("Username and password required", "error")
             return redirect(url_for("secure.secure_register"))
 
-        hashed = generate_password_hash(password)
         conn = get_db()
         try:
+            # insecure - store raw password, no hashing
             conn.execute(
                 "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
-                (username, hashed, "user")
+                (username, password, "user")
             )
             conn.commit()
-            flash("Registered successfully!", "success")
+            flash("Registered (INSECURE – password stored in plaintext).", "success")
             return redirect(url_for("secure.secure_login"))
-        except:
-            flash("Username already exists!", "error")
+        except Exception as e:
+            flash("Username already exists or registration failed.", "error")
             return redirect(url_for("secure.secure_register"))
 
     return render_template("secure_register.html")
+
 
 
 
@@ -55,20 +56,28 @@ def secure_login():
         password = request.form.get("password")
 
         conn = get_db()
-        user = conn.execute(
-            "SELECT id, username, password_hash FROM users WHERE username=?",
-            (username,)
-        ).fetchone()
 
-        if user and check_password_hash(user["password_hash"], password):
+        # insecure - SQL injection + plaintext check
+        query = (
+            f"SELECT id, username, password_hash "
+            f"FROM users WHERE username = '{username}' "
+            f"AND password_hash = '{password}'"
+        )
+        print("INSECURE LOGIN QUERY:", query)  # useful for screenshots
+
+        user = conn.execute(query).fetchone()
+
+        if user:
             session.clear()
             session["user_id"] = user["id"]
+            flash("Logged in (INSECURE – SQLi possible).", "success")
             return redirect(url_for("secure.secure_dashboard"))
         else:
-            flash("Invalid username or password.", "error")
+            flash("Invalid username or password (insecure login).", "error")
             return redirect(url_for("secure.secure_login"))
 
     return render_template("secure_login.html")
+
 
 
 # dashboard
@@ -95,19 +104,21 @@ def secure_dashboard():
 def secure_comment():
     user = current_user()
     if not user:
-     return redirect(url_for("secure.secure_login"))
+        return redirect(url_for("secure.secure_login"))
 
+    # insecure - no sanitisation at all
     raw = request.form.get("comment", "")
-    safe = bleach.clean(raw, tags=["b","i","u","em","strong","p","br"], strip=True)
 
     conn = get_db()
     conn.execute(
         "INSERT INTO messages (content, user_id) VALUES (?, ?)",
-        (safe, user["id"])
+        (raw, user["id"])
     )
     conn.commit()
 
+    flash("Comment posted (INSECURE – stored XSS possible).", "success")
     return redirect(url_for("secure.secure_dashboard"))
+
 
 
 # search (SQL injection-safe)

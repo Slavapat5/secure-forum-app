@@ -31,3 +31,14 @@
     <hr>
 {% endfor %}
 {% endblock %}
+
+<div id="welcome-dom"></div>
+<script>
+    // INSECURE: DOM-based XSS demo
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get("name");
+    if (name) {
+        document.getElementById("welcome-dom").innerHTML = "Welcome " + name;
+    }
+</script>
+{% endblock %}
