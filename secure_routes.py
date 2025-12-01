@@ -1,7 +1,6 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, session
-from werkzeug.security import generate_password_hash, check_password_hash
 from database import get_db
-import bleach
+
 
 secure = Blueprint("secure", __name__, template_folder="templates")
 
@@ -31,19 +30,20 @@ def secure_register():
 
         conn = get_db()
         try:
-            # insecure - store raw password, no hashing
+            # insecure - store plaintext password
             conn.execute(
                 "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
                 (username, password, "user")
             )
             conn.commit()
-            flash("Registered (INSECURE – password stored in plaintext).", "success")
+            flash("Registered (INSECURE – plaintext password).", "success")
             return redirect(url_for("secure.secure_login"))
-        except Exception as e:
+        except Exception:
             flash("Username already exists or registration failed.", "error")
             return redirect(url_for("secure.secure_register"))
 
     return render_template("secure_register.html")
+
 
 
 
@@ -56,13 +56,13 @@ def secure_login():
 
         conn = get_db()
 
-        # insecure - SQL injection + plaintext check
+        # insecure SQL injection using string concatenation
         query = (
             f"SELECT id, username, password_hash "
             f"FROM users WHERE username = '{username}' "
             f"AND password_hash = '{password}'"
         )
-        print("INSECURE LOGIN QUERY:", query)
+        print("INSECURE LOGIN QUERY:", query) 
 
         user = conn.execute(query).fetchone()
 
@@ -76,6 +76,7 @@ def secure_login():
             return redirect(url_for("secure.secure_login"))
 
     return render_template("secure_login.html")
+
 
 # dashboard
 @secure.route("/secure/dashboard")
@@ -96,7 +97,7 @@ def secure_dashboard():
 
 
 
-# INSECURE COMMENT – STORED XSS
+# insecure comment – STORED XSS
 @secure.route("/secure/comment", methods=["POST"])
 def secure_comment():
     user = current_user()
@@ -116,18 +117,21 @@ def secure_comment():
     flash("Comment posted (INSECURE – stored XSS possible).", "success")
     return redirect(url_for("secure.secure_dashboard"))
 
-# search (SQL injection-safe)
 
+# search (SQL injection-safe)
 @secure.route("/secure/search")
 def secure_search():
     q = request.args.get("q", "").strip()
     conn = get_db()
-    rows = conn.execute(
-     "SELECT * FROM messages WHERE content LIKE ?",
-      (f"%{q}%",)
-    ).fetchall()
+
+    # insecure direct string concatenation
+    sql = f"SELECT * FROM messages WHERE content LIKE '%{q}%'"
+    print("INSECURE SEARCH SQL:", sql)
+
+    rows = conn.execute(sql).fetchall()
 
     return render_template("secure_search.html", q=q, rows=rows)
+
 
 # logout
 @secure.route("/secure/logout")

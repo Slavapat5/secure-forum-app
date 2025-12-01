@@ -8,6 +8,7 @@
 
 <h3>Post a Comment</h3>
 <form method="POST" action="{{ url_for('secure.secure_comment') }}">
+    <!-- No CSRF hidden field -->
     <textarea name="comment" placeholder="Write message..." required></textarea><br><br>
     <button type="submit">Submit</button>
 </form>
@@ -26,19 +27,18 @@
 {% for c in comments %}
     <p>
         <strong>{{ c.username }}</strong>: <br>
-        {{ c.content|safe }}
+        {{ c.content|safe }}   {# INSECURE: executes HTML/JS (stored XSS) #}
     </p>
     <hr>
 {% endfor %}
-{% endblock %}
 
 <div id="welcome-dom"></div>
 <script>
-  // insecure - DOM-based XSS
-  const params = new URLSearchParams(window.location.search);
-  const name = params.get("name");
-  if (name) {
-      document.getElementById("welcome-dom").innerHTML = "Welcome " + name;
-  }
+    // insecure - DOM-based XSS
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get("name");
+    if (name) {
+        document.getElementById("welcome-dom").innerHTML = "Welcome " + name;
+    }
 </script>
-
+{% endblock %}

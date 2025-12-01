@@ -2,7 +2,7 @@
 {% block content %}
 <h2>Secure Registration</h2>
 
-<form method="POST">
+<form method="POST" action="{{ url_for('secure.secure_register') }}">
     <label>Username:</label><br>
     <input name="username" required><br><br>
 
@@ -11,6 +11,7 @@
 
     <button type="submit">Register</button>
 </form>
+
 
 <p><a href="{{ url_for('secure.secure_login') }}">Already have an account?</a></p>
 
