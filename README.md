@@ -2,6 +2,8 @@
 
 This project is a Flask + SQLite web application used to demonstrate:
 
+Python Version: Python 3.14.0
+
 - Insecure vs secure implementations
 - SQL Injection
 - XSS 
